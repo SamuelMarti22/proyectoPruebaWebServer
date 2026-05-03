@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineLog — Inicio</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ── Header compartido ──────────────────────────────────── -->
+<header class="site-header">
+  <div class="logo">CINE<span>LOG</span></div>
+  <nav>
+    <a href="index.html" class="active">Inicio</a>
+    <a href="catalogo.html">Catálogo</a>
+    <a href="agregar.html">Agregar</a>
+    <a href="database.html">Base de Datos</a>
+  </nav>
+</header>
+
+<!-- ── CASO 1: Página con hipertextos + UNA imagen ──────── -->
+<main>
+
+  <!-- Hero con UNA imagen de fondo (caso 1) -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="grain"></div>
+    <!-- CASO 1 → imagen única -->
+    <img
+      src="https://image.tmdb.org/t/p/original/s3TBrRGB1iav7gFOCNx3H31MoES.jpg"
+      alt="Cine portada"
+      style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.18;border-radius:0;"
+    />
+    <div class="hero-content">
+      <p class="hero-eyebrow">Tu bitácora de cine</p>
+      <h1 class="hero-title">El mejor<br><em>cine</em><br>en un lugar</h1>
+      <p class="hero-sub">Explora, descubre y registra las películas que definen una generación.</p>
+    </div>
+  </section>
+
+  <div class="section">
+    <h2 class="section-title">Bienvenido a CineLog</h2>
+    <p class="section-subtitle">Una plataforma minimalista para los amantes del séptimo arte</p>
+
+    <!-- CASO 1 → hipertextos -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-top:8px;">
+
+      <a href="catalogo.html" class="nav-card" style="
+        display:block;padding:28px;
+        background:var(--surface);border:1px solid var(--border);
+        border-radius:10px;transition:all .25s;
+      "
+      onmouseover="this.style.borderColor='var(--accent)';this.style.transform='translateY(-4px)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'"
+      >
+        <div style="font-size:32px;margin-bottom:12px;">🎬</div>
+        <h3 style="font-family:var(--font-hero);font-size:22px;letter-spacing:1px;margin-bottom:6px;">Catálogo Completo</h3>
+        <p style="color:var(--muted);font-size:13px;">Navega todas las películas registradas con múltiples imágenes y filtros por género.</p>
+      </a>
+
+      <a href="agregar.html" class="nav-card" style="
+        display:block;padding:28px;
+        background:var(--surface);border:1px solid var(--border);
+        border-radius:10px;transition:all .25s;
+      "
+      onmouseover="this.style.borderColor='var(--accent2)';this.style.transform='translateY(-4px)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'"
+      >
+        <div style="font-size:32px;margin-bottom:12px;">➕</div>
+        <h3 style="font-family:var(--font-hero);font-size:22px;letter-spacing:1px;margin-bottom:6px;">Agregar Película</h3>
+        <p style="color:var(--muted);font-size:13px;">Envía un POST al servidor y guarda nuevas películas en la base de datos TXT.</p>
+      </a>
+
+      <a href="database.html" class="nav-card" style="
+        display:block;padding:28px;
+        background:var(--surface);border:1px solid var(--border);
+        border-radius:10px;transition:all .25s;
+      "
+      onmouseover="this.style.borderColor='#47e878';this.style.transform='translateY(-4px)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'"
+      >
+        <div style="font-size:32px;margin-bottom:12px;">🗄️</div>
+        <h3 style="font-family:var(--font-hero);font-size:22px;letter-spacing:1px;margin-bottom:6px;">Base de Datos</h3>
+        <p style="color:var(--muted);font-size:13px;">Visualiza el archivo <code style="color:var(--accent)">database.txt</code> en crudo y como tabla estructurada.</p>
+      </a>
+
+    </div>
+
+    <!-- Info técnica -->
+    <div style="margin-top:48px;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
+      <h3 style="font-family:var(--font-hero);font-size:24px;letter-spacing:1px;margin-bottom:16px;color:var(--accent)">Stack Técnico</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+        <div style="color:var(--muted);font-size:13px;"><strong style="color:var(--text)">Servidor:</strong><br/>Node.js nativo — sin frameworks.<br/>HTTP module puro.</div>
+        <div style="color:var(--muted);font-size:13px;"><strong style="color:var(--text)">Cliente:</strong><br/>HTML + CSS + JS vanilla.<br/>Sin librerías externas.</div>
+        <div style="color:var(--muted);font-size:13px;"><strong style="color:var(--text)">Base de datos:</strong><br/>Archivo <code style="color:var(--accent)">database.txt</code><br/>separado por pipes "|".</div>
+        <div style="color:var(--muted);font-size:13px;"><strong style="color:var(--text)">API:</strong><br/>GET /api/movies<br/>POST /api/movies</div>
+      </div>
+    </div>
+
+    <!-- Tabla de Casos -->
+    <div style="margin-top:32px;">
+      <h3 style="font-family:var(--font-hero);font-size:24px;letter-spacing:1px;margin-bottom:16px;">Páginas del Proyecto</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Caso</th><th>Página</th><th>Descripción</th><th>Enlace</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--accent)">Caso 1</td>
+              <td>index.html</td>
+              <td>Hipertextos + una imagen de portada</td>
+              <td><a href="index.html" style="color:var(--accent)">Estás aquí</a></td>
+            </tr>
+            <tr>
+              <td style="color:var(--accent)">Caso 2</td>
+              <td>catalogo.html</td>
+              <td>Hipertextos + múltiples imágenes (posters)</td>
+              <td><a href="catalogo.html" style="color:var(--accent)">Ver →</a></td>
+            </tr>
+            <tr>
+              <td style="color:var(--accent)">Caso 3</td>
+              <td>agregar.html</td>
+              <td>Formulario POST — archivo único de interacción con el servidor</td>
+              <td><a href="agregar.html" style="color:var(--accent)">Ver →</a></td>
+            </tr>
+            <tr>
+              <td style="color:var(--accent)">Caso 4</td>
+              <td>database.html</td>
+              <td>Múltiples archivos — TXT crudo + tabla de datos</td>
+              <td><a href="database.html" style="color:var(--accent)">Ver →</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

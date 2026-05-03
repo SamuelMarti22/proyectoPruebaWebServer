@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineLog — Agregar Película</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Estilos adicionales exclusivos de esta página (caso 3: archivo único) */
+    .preview-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: none;
+      margin-top: 32px;
+    }
+    .preview-card.show { display: grid; grid-template-columns: 140px 1fr; }
+    .preview-poster { width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--surface2); }
+    .preview-body { padding: 20px; }
+    .preview-title { font-family:var(--font-hero);font-size:28px;letter-spacing:1px;margin-bottom:4px; }
+    .preview-meta { color:var(--muted);font-size:12px;margin-bottom:10px; }
+    .preview-desc { font-size:13px;color:var(--muted); }
+
+    .req-log {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      margin-top: 32px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .req-log .log-line { opacity: .6; }
+    .req-log .log-line.green { color: #47e878; opacity:1; }
+    .req-log .log-line.yellow{ color: var(--accent); opacity:1; }
+    .req-log .log-line.red   { color: var(--accent2); opacity:1; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">CINE<span>LOG</span></div>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="catalogo.html">Catálogo</a>
+    <a href="agregar.html" class="active">Agregar</a>
+    <a href="database.html">Base de Datos</a>
+  </nav>
+</header>
+
+<!-- CASO 3: Página con un solo archivo de interacción (formulario POST) -->
+<main>
+  <div class="form-wrap">
+
+    <h1 class="form-title">Agregar Película</h1>
+    <p class="form-sub">
+      Completa el formulario y se enviará un <strong>POST</strong> a
+      <code style="color:var(--accent)">http://localhost:3000/api/movies</code>.
+      El servidor guardará la película en
+      <a href="database.html" style="color:var(--accent)">database.txt</a>.
+    </p>
+
+    <!-- Formulario (CASO 3 → archivo único de funcionalidad compleja) -->
+    <div class="form-grid">
+
+      <div class="form-group full">
+        <label for="title">Título de la Película *</label>
+        <input type="text" id="title" placeholder="Ej: The Matrix" />
+      </div>
+
+      <div class="form-group">
+        <label for="year">Año *</label>
+        <input type="number" id="year" placeholder="1999" min="1888" max="2099" />
+      </div>
+
+      <div class="form-group">
+        <label for="genre">Género *</label>
+        <select id="genre">
+          <option value="">Selecciona un género</option>
+          <option value="Action">Action</option>
+          <option value="Animation">Animation</option>
+          <option value="Comedy">Comedy</option>
+          <option value="Crime">Crime</option>
+          <option value="Documentary">Documentary</option>
+          <option value="Drama">Drama</option>
+          <option value="Fantasy">Fantasy</option>
+          <option value="Horror">Horror</option>
+          <option value="Romance">Romance</option>
+          <option value="Sci-Fi">Sci-Fi</option>
+          <option value="Thriller">Thriller</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="director">Director *</label>
+        <input type="text" id="director" placeholder="Ej: Lana Wachowski" />
+      </div>
+
+      <div class="form-group">
+        <label for="rating">Rating (0–10) *</label>
+        <input type="number" id="rating" placeholder="8.7" min="0" max="10" step="0.1" />
+      </div>
+
+      <div class="form-group">
+        <label for="duration">Duración (min)</label>
+        <input type="number" id="duration" placeholder="136" min="1" />
+      </div>
+
+      <div class="form-group full">
+        <label for="cast">Reparto principal</label>
+        <input type="text" id="cast" placeholder="Keanu Reeves, Carrie-Anne Moss, Laurence Fishburne" />
+      </div>
+
+      <div class="form-group full">
+        <label for="poster">URL del Poster</label>
+        <input type="url" id="poster" placeholder="https://image.tmdb.org/t/p/w500/..." />
+      </div>
+
+      <div class="form-group full">
+        <label for="description">Sinopsis *</label>
+        <textarea id="description" placeholder="Describe brevemente la trama de la película..."></textarea>
+      </div>
+
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="submitMovie()">
+        ✦ Guardar Película
+      </button>
+      <button class="btn btn-ghost" onclick="previewMovie()">
+        👁 Vista previa
+      </button>
+      <button class="btn btn-ghost" onclick="clearForm()" style="color:var(--accent2);border-color:var(--accent2);">
+        ✕ Limpiar
+      </button>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <!-- Vista previa de la card -->
+    <div id="preview" class="preview-card">
+      <img id="preview-poster" class="preview-poster" src="" alt="poster" />
+      <div class="preview-body">
+        <h3 id="preview-title" class="preview-title"></h3>
+        <p id="preview-meta"  class="preview-meta"></p>
+        <p id="preview-desc"  class="preview-desc"></p>
+      </div>
+    </div>
+
+    <!-- Log de la petición HTTP -->
+    <div style="margin-top:32px;">
+      <h3 style="font-family:var(--font-hero);font-size:22px;letter-spacing:1px;margin-bottom:4px;">Log de petición</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Aquí se mostrará el payload enviado y la respuesta del servidor.</p>
+      <div class="req-log" id="req-log">
+        <span class="log-line">// Aquí aparecerá el log cuando envíes el formulario...</span>
+      </div>
+    </div>
+
+    <!-- Info de la API -->
+    <div style="margin-top:32px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
+      <h4 style="font-family:var(--font-hero);font-size:18px;letter-spacing:1px;margin-bottom:12px;color:var(--accent)">Endpoint</h4>
+      <pre style="font-size:12px;color:#a0d0e8;line-height:1.8;">POST http://localhost:3000/api/movies
+Content-Type: application/json
+
+{
+  "title":       "string (requerido)",
+  "year":        "number (requerido)",
+  "genre":       "string (requerido)",
+  "director":    "string (requerido)",
+  "rating":      "number 0-10 (requerido)",
+  "description": "string (requerido)",
+  "poster":      "url (opcional)",
+  "duration":    "number en minutos (opcional)",
+  "cast":        "string separado por comas (opcional)"
+}</pre>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  const API = 'http://localhost:3000/api/movies';
+
+  function getFormData() {
+    return {
+      title:       document.getElementById('title').value.trim(),
+      year:        document.getElementById('year').value.trim(),
+      genre:       document.getElementById('genre').value,
+      director:    document.getElementById('director').value.trim(),
+      rating:      document.getElementById('rating').value.trim(),
+      duration:    document.getElementById('duration').value.trim() || '0',
+      cast:        document.getElementById('cast').value.trim() || 'N/A',
+      poster:      document.getElementById('poster').value.trim(),
+      description: document.getElementById('description').value.trim(),
+    };
+  }
+
+  function log(msg, cls = '') {
+    const box = document.getElementById('req-log');
+    box.innerHTML += `\n<span class="log-line ${cls}">${msg}</span>`;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = `alert ${type} show`;
+    setTimeout(() => el.classList.remove('show'), 5000);
+  }
+
+  function previewMovie() {
+    const d = getFormData();
+    const preview = document.getElementById('preview');
+    document.getElementById('preview-title').textContent  = d.title  || '(sin título)';
+    document.getElementById('preview-meta').textContent   = `${d.director || '?'}  ·  ${d.year || '?'}  ·  ★ ${d.rating || '?'}  ·  ${d.genre || '?'}`;
+    document.getElementById('preview-desc').textContent   = d.description || '(sin sinopsis)';
+    const poster = document.getElementById('preview-poster');
+    poster.src = d.poster || `https://via.placeholder.com/140x210/12121a/8885a0?text=${encodeURIComponent(d.title||'?')}`;
+    poster.onerror = () => { poster.src = `https://via.placeholder.com/140x210/12121a/8885a0?text=Sin+Imagen`; };
+    preview.classList.add('show');
+  }
+
+  function clearForm() {
+    ['title','year','genre','director','rating','duration','cast','poster','description']
+      .forEach(id => { const el = document.getElementById(id); el.value = ''; });
+    document.getElementById('preview').classList.remove('show');
+    document.getElementById('req-log').innerHTML = '<span class="log-line">// Formulario limpiado.</span>';
+  }
+
+  async function submitMovie() {
+    const d = getFormData();
+
+    // Validación
+    const required = ['title','year','genre','director','rating','description'];
+    for (const f of required) {
+      if (!d[f]) {
+        showAlert(`⚠ Campo requerido: "${f}"`, 'error');
+        return;
+      }
+    }
+
+    const box = document.getElementById('req-log');
+    box.innerHTML = '';
+    log('── Iniciando petición POST ──', 'yellow');
+    log(`→ POST ${API}`);
+    log(`→ Content-Type: application/json`);
+    log(`→ Body: ${JSON.stringify(d, null, 2)}`);
+    log('');
+    log('Esperando respuesta del servidor...', 'yellow');
+
+    try {
+      const res  = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(d),
+      });
+      const json = await res.json();
+
+      log('');
+      log(`← Status: ${res.status} ${res.statusText}`, res.ok ? 'green' : 'red');
+      log(`← Body: ${JSON.stringify(json, null, 2)}`, res.ok ? 'green' : 'red');
+
+      if (res.ok) {
+        showAlert(`✓ "${json.data.title}" guardada correctamente (ID: ${json.data.id})`, 'success');
+        clearForm();
+      } else {
+        showAlert(`Error ${res.status}: ${json.error}`, 'error');
+      }
+    } catch (e) {
+      log('');
+      log(`← ERROR: ${e.message}`, 'red');
+      showAlert('No se pudo conectar con el servidor. ¿Está corriendo server.js?', 'error');
+    }
+  }
+</script>
+
+</body>
+</html>

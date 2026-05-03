@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineLog — Catálogo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">CINE<span>LOG</span></div>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="catalogo.html" class="active">Catálogo</a>
+    <a href="agregar.html">Agregar</a>
+    <a href="database.html">Base de Datos</a>
+  </nav>
+</header>
+
+<!-- CASO 2: Múltiples imágenes (posters) + hipertextos -->
+<main>
+
+  <div class="section">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px;">
+      <div>
+        <h1 class="section-title">Catálogo de Películas</h1>
+        <p class="section-subtitle">
+          Caso 2 — múltiples imágenes cargadas desde la API &nbsp;·&nbsp;
+          <a href="agregar.html" style="color:var(--accent);">¿Falta una película? Agrégala →</a>
+        </p>
+      </div>
+      <!-- Filtro por género -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:12px;color:var(--muted);letter-spacing:1px;">FILTRAR:</span>
+        <button class="filter-btn active btn btn-ghost" data-genre="all"
+          style="padding:6px 14px;font-size:12px;">Todos</button>
+        <button class="filter-btn btn btn-ghost" data-genre="Sci-Fi"
+          style="padding:6px 14px;font-size:12px;">Sci-Fi</button>
+        <button class="filter-btn btn btn-ghost" data-genre="Crime"
+          style="padding:6px 14px;font-size:12px;">Crime</button>
+        <button class="filter-btn btn btn-ghost" data-genre="Action"
+          style="padding:6px 14px;font-size:12px;">Action</button>
+        <button class="filter-btn btn btn-ghost" data-genre="Animation"
+          style="padding:6px 14px;font-size:12px;">Animation</button>
+      </div>
+    </div>
+
+    <!-- Contador -->
+    <p id="count" style="font-size:13px;color:var(--muted);margin-bottom:20px;"></p>
+
+    <!-- Grid de cards con múltiples imágenes (CASO 2) -->
+    <div id="grid" class="movies-grid">
+      <div class="loading">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal de detalle -->
+<div id="modal" class="modal-overlay">
+  <div style="position:relative;max-width:780px;width:100%;">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal" id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000/api/movies';
+  let allMovies = [];
+  let currentGenre = 'all';
+
+  async function loadMovies() {
+    try {
+      const res  = await fetch(API);
+      const json = await res.json();
+      allMovies  = json.data;
+      renderGrid(allMovies);
+    } catch (e) {
+      document.getElementById('grid').innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">
+          <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+          <p>No se pudo conectar con el servidor.</p>
+          <p style="font-size:12px;margin-top:8px;">Asegúrate de que <code style="color:var(--accent)">server.js</code> esté corriendo en el puerto 3000.</p>
+        </div>`;
+    }
+  }
+
+  function renderGrid(movies) {
+    const grid = document.getElementById('grid');
+    document.getElementById('count').textContent = `${movies.length} película${movies.length !== 1 ? 's' : ''} encontrada${movies.length !== 1 ? 's' : ''}`;
+
+    if (movies.length === 0) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">Sin resultados para este género.</div>`;
+      return;
+    }
+
+    /* CASO 2: cada card tiene SU imagen (poster) → múltiples imágenes en la misma página */
+    grid.innerHTML = movies.map(m => `
+      <article class="card" onclick="openModal(${m.id})">
+        <img
+          class="card-poster"
+          src="${m.poster}"
+          alt="${m.title}"
+          loading="lazy"
+          onerror="this.src='https://via.placeholder.com/300x450/12121a/8885a0?text=${encodeURIComponent(m.title)}'"
+        />
+        <div class="card-body">
+          <h2 class="card-title">${m.title}</h2>
+          <div class="card-meta">
+            <span class="card-genre">${m.genre}</span>
+            <span class="card-rating">★ ${m.rating}</span>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  // Filtros
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentGenre = btn.dataset.genre;
+      const filtered = currentGenre === 'all'
+        ? allMovies
+        : allMovies.filter(m => m.genre === currentGenre);
+      renderGrid(filtered);
+    });
+  });
+
+  // Modal
+  function openModal(id) {
+    const m = allMovies.find(x => parseInt(x.id) === parseInt(id));
+    if (!m) return;
+    document.getElementById('modal-content').innerHTML = `
+      <img class="modal-poster"
+        src="${m.poster}"
+        alt="${m.title}"
+        onerror="this.src='https://via.placeholder.com/220x330/12121a/8885a0?text=Sin+Imagen'"
+      />
+      <div class="modal-body">
+        <p class="modal-genre">${m.genre}</p>
+        <h2 class="modal-title">${m.title}</h2>
+        <p class="modal-director">Dir. ${m.director} &nbsp;·&nbsp; ${m.year}</p>
+        <div class="modal-tags">
+          <span class="tag gold">★ ${m.rating} / 10</span>
+          <span class="tag">${m.duration} min</span>
+          <span class="tag">${m.year}</span>
+        </div>
+        <p class="modal-desc">${m.description}</p>
+        <p class="modal-cast-label">Reparto</p>
+        <p class="modal-cast">${m.cast}</p>
+      </div>
+    `;
+    document.getElementById('modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal')) closeModal();
+  });
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  loadMovies();
+</script>
+
+</body>
+</html>

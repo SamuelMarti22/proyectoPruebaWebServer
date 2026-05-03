@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineLog — Base de Datos</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">CINE<span>LOG</span></div>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="catalogo.html">Catálogo</a>
+    <a href="agregar.html">Agregar</a>
+    <a href="database.html" class="active">Base de Datos</a>
+  </nav>
+</header>
+
+<!-- CASO 4: Múltiples archivos — consume /api/db (TXT crudo) y /api/movies (JSON) -->
+<main>
+  <div class="db-wrap" style="max-width:1280px;margin:0 auto;">
+
+    <div class="db-header">
+      <div>
+        <h1 style="font-family:var(--font-hero);font-size:42px;letter-spacing:2px;">Base de Datos</h1>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px;">
+          Caso 4 — solicita múltiples recursos al servidor:
+          <code style="color:var(--accent)">/api/db</code> (TXT plano) +
+          <code style="color:var(--accent)">/api/movies</code> (JSON) +
+          <code style="color:var(--accent)">styles.css</code>
+        </p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="loadAll()" id="refresh-btn">↻ Recargar</button>
+        <a href="agregar.html" class="btn btn-primary">+ Agregar Película</a>
+      </div>
+    </div>
+
+    <!-- Stats cards -->
+    <div id="stats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:36px;"></div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;">
+      <button class="tab-btn active" data-tab="table" onclick="switchTab('table')"
+        style="padding:10px 20px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-body);font-size:13px;border-bottom:2px solid transparent;transition:all .2s;">
+        📋 Tabla
+      </button>
+      <button class="tab-btn" data-tab="raw" onclick="switchTab('raw')"
+        style="padding:10px 20px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-body);font-size:13px;border-bottom:2px solid transparent;transition:all .2s;">
+        📄 TXT Crudo
+      </button>
+      <button class="tab-btn" data-tab="json" onclick="switchTab('json')"
+        style="padding:10px 20px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-body);font-size:13px;border-bottom:2px solid transparent;transition:all .2s;">
+        {} JSON
+      </button>
+      <button class="tab-btn" data-tab="requests" onclick="switchTab('requests')"
+        style="padding:10px 20px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:var(--font-body);font-size:13px;border-bottom:2px solid transparent;transition:all .2s;">
+        🌐 Peticiones HTTP
+      </button>
+    </div>
+
+    <!-- Tab: Tabla estructurada -->
+    <div id="tab-table" class="tab-pane">
+      <div id="table-loading" class="loading"><span></span><span></span><span></span></div>
+      <div id="table-wrap" class="table-wrap" style="display:none;overflow-x:auto;">
+        <table id="movies-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Título</th><th>Año</th><th>Género</th>
+              <th>Director</th><th>Rating</th><th>Duración</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: TXT crudo -->
+    <div id="tab-raw" class="tab-pane" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:12px;color:var(--muted);">📄 Contenido de <code style="color:var(--accent)">database.txt</code></span>
+        <button class="btn btn-ghost" onclick="copyRaw()" style="font-size:12px;padding:6px 14px;">Copiar</button>
+      </div>
+      <div id="raw-loading" class="loading"><span></span><span></span><span></span></div>
+      <pre id="db-raw" class="db-raw" style="display:none;"></pre>
+    </div>
+
+    <!-- Tab: JSON -->
+    <div id="tab-json" class="tab-pane" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:12px;color:var(--muted);">Respuesta de <code style="color:var(--accent)">GET /api/movies</code></span>
+        <button class="btn btn-ghost" onclick="copyJson()" style="font-size:12px;padding:6px 14px;">Copiar JSON</button>
+      </div>
+      <pre id="db-json" class="db-raw" style="color:#a0c4e8;display:none;"></pre>
+    </div>
+
+    <!-- Tab: HTTP Requests log -->
+    <div id="tab-requests" class="tab-pane" style="display:none;">
+      <h3 style="font-family:var(--font-hero);font-size:22px;letter-spacing:1px;margin-bottom:16px;">
+        Recursos solicitados por esta página
+      </h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Método</th><th>URL</th><th>Tipo</th><th>Estado</th><th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody id="req-table">
+            <tr>
+              <td>1</td>
+              <td><span style="color:#47e878">GET</span></td>
+              <td><code style="color:var(--accent)">/database.html</code></td>
+              <td>Document</td>
+              <td id="status-html" style="color:var(--muted)">—</td>
+              <td>Página principal (este archivo)</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><span style="color:#47e878">GET</span></td>
+              <td><code style="color:var(--accent)">/styles.css</code></td>
+              <td>Stylesheet</td>
+              <td id="status-css" style="color:var(--muted)">—</td>
+              <td>Hoja de estilos compartida</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><span style="color:#47e878">GET</span></td>
+              <td><code style="color:var(--accent)">/api/movies</code></td>
+              <td>JSON / API</td>
+              <td id="status-api" style="color:var(--muted)">—</td>
+              <td>Lista de películas (parsed)</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><span style="color:#47e878">GET</span></td>
+              <td><code style="color:var(--accent)">/api/db</code></td>
+              <td>Text / TXT</td>
+              <td id="status-db" style="color:var(--muted)">—</td>
+              <td>Archivo database.txt en crudo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:24px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
+        <h4 style="font-family:var(--font-hero);font-size:18px;letter-spacing:1px;margin-bottom:12px;color:var(--accent)">
+          ¿Por qué es Caso 4?
+        </h4>
+        <p style="color:var(--muted);font-size:13px;line-height:1.8;">
+          Esta página solicita <strong style="color:var(--text)">múltiples archivos distintos</strong> al servidor:
+          el documento HTML, la hoja de estilos CSS, la API JSON (<code style="color:var(--accent)">/api/movies</code>)
+          y el archivo TXT plano (<code style="color:var(--accent)">/api/db</code>).
+          Esto contrasta con el Caso 3 que carga un solo recurso pesado.
+          El servidor Node.js sirve todos estos recursos desde un único proceso HTTP.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  const BASE = 'http://localhost:3000';
+  let cachedMovies = [];
+  let cachedRaw    = '';
+
+  // ── Tabs ────────────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
+    document.getElementById(`tab-${name}`).style.display = 'block';
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const isActive = btn.dataset.tab === name;
+      btn.style.color      = isActive ? 'var(--accent)' : 'var(--muted)';
+      btn.style.borderBottom = isActive ? '2px solid var(--accent)' : '2px solid transparent';
+    });
+  }
+
+  // ── Stats cards ─────────────────────────────────────────────────────────
+  function renderStats(movies) {
+    const genres  = [...new Set(movies.map(m => m.genre))].length;
+    const avgRate = (movies.reduce((s,m) => s + parseFloat(m.rating||0), 0) / movies.length).toFixed(1);
+    const newest  = Math.max(...movies.map(m => parseInt(m.year)||0));
+
+    const stats = [
+      { label: 'Películas',    value: movies.length,  color: 'var(--accent)'  },
+      { label: 'Géneros',      value: genres,         color: '#a0e0f8'        },
+      { label: 'Rating medio', value: `★ ${avgRate}`, color: 'var(--accent)'  },
+      { label: 'Más reciente', value: newest,         color: 'var(--accent2)' },
+    ];
+    document.getElementById('stats').innerHTML = stats.map(s => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;">
+        <div style="font-family:var(--font-hero);font-size:36px;letter-spacing:1px;color:${s.color}">${s.value}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;text-transform:uppercase;">${s.label}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── Tabla ───────────────────────────────────────────────────────────────
+  function renderTable(movies) {
+    document.getElementById('table-loading').style.display = 'none';
+    const wrap = document.getElementById('table-wrap');
+    wrap.style.display = 'block';
+    document.getElementById('table-body').innerHTML = movies.map(m => `
+      <tr>
+        <td style="color:var(--accent)">${m.id}</td>
+        <td style="color:var(--text);font-weight:500">${m.title}</td>
+        <td>${m.year}</td>
+        <td><span style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:11px;">${m.genre}</span></td>
+        <td>${m.director}</td>
+        <td style="color:var(--accent)">★ ${m.rating}</td>
+        <td>${m.duration} min</td>
+      </tr>
+    `).join('');
+  }
+
+  // ── TXT crudo ───────────────────────────────────────────────────────────
+  function renderRaw(txt) {
+    document.getElementById('raw-loading').style.display = 'none';
+    const el = document.getElementById('db-raw');
+    el.style.display = 'block';
+    el.textContent = txt;
+  }
+
+  // ── JSON ────────────────────────────────────────────────────────────────
+  function renderJson(data) {
+    const el = document.getElementById('db-json');
+    el.style.display = 'block';
+    el.textContent = JSON.stringify(data, null, 2);
+  }
+
+  function setStatus(id, code, ok) {
+    const el = document.getElementById(id);
+    el.textContent = code;
+    el.style.color = ok ? '#47e878' : 'var(--accent2)';
+  }
+
+  // ── Carga ───────────────────────────────────────────────────────────────
+  async function loadAll() {
+    document.getElementById('refresh-btn').textContent = '↻ Recargando...';
+
+    // Petición 1: /api/movies (JSON)
+    try {
+      const res  = await fetch(`${BASE}/api/movies`);
+      const json = await res.json();
+      cachedMovies = json.data;
+      renderStats(cachedMovies);
+      renderTable(cachedMovies);
+      renderJson(json);
+      setStatus('status-api', `${res.status} OK`, true);
+    } catch (e) {
+      document.getElementById('table-loading').style.display = 'none';
+      document.getElementById('table-wrap').innerHTML =
+        `<p style="padding:40px;text-align:center;color:var(--muted)">No se pudo cargar. ¿Está corriendo el servidor?</p>`;
+      setStatus('status-api', 'Error', false);
+    }
+
+    // Petición 2: /api/db (TXT)
+    try {
+      const res = await fetch(`${BASE}/api/db`);
+      cachedRaw = await res.text();
+      renderRaw(cachedRaw);
+      setStatus('status-db', `${res.status} OK`, true);
+    } catch (e) {
+      document.getElementById('raw-loading').style.display = 'none';
+      document.getElementById('db-raw').textContent = 'Error al cargar el archivo TXT.';
+      document.getElementById('db-raw').style.display = 'block';
+      setStatus('status-db', 'Error', false);
+    }
+
+    setStatus('status-html', '200 OK', true);
+    setStatus('status-css',  '200 OK', true);
+    document.getElementById('refresh-btn').textContent = '↻ Recargar';
+  }
+
+  function copyRaw() {
+    navigator.clipboard.writeText(cachedRaw).then(() => alert('¡Copiado al portapapeles!'));
+  }
+  function copyJson() {
+    navigator.clipboard.writeText(JSON.stringify(cachedMovies, null, 2)).then(() => alert('¡JSON copiado!'));
+  }
+
+  loadAll();
+</script>
+
+</body>
+</html>
