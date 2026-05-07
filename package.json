@@ -1,0 +1,12 @@
+{
+  "name": "movies-server",
+  "version": "1.0.0",
+  "description": "CineLog Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  }
+}

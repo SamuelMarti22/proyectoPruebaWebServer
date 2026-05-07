@@ -1,9 +1,11 @@
+require('dotenv').config();
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || 'localhost';
 const DB_FILE = path.join(__dirname, 'database.txt');
 const CLIENT_DIR = path.join(__dirname, 'client');
 
@@ -182,8 +184,8 @@ const server = http.createServer(async (req, res) => {
   sendFile(res, filePath);
 });
 
-server.listen(PORT, () => {
-  console.log(`\n🎬 CineLog Server corriendo en http://localhost:${PORT}`);
-  console.log(`   API Movies  → http://localhost:${PORT}/api/movies`);
-  console.log(`   Database    → http://localhost:${PORT}/api/db\n`);
+server.listen(PORT, HOST, () => {
+  console.log(`\n🎬 CineLog Server corriendo en http://${HOST}:${PORT}`);
+  console.log(`   API Movies  → http://${HOST}:${PORT}/api/movies`);
+  console.log(`   Database    → http://${HOST}:${PORT}/api/db\n`);
 });
