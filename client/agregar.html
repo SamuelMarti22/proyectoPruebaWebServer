@@ -59,7 +59,7 @@
     <h1 class="form-title">Agregar Película</h1>
     <p class="form-sub">
       Completa el formulario y se enviará un <strong>POST</strong> a
-      <code style="color:var(--accent)">http://localhost:3000/api/movies</code>.
+      <code style="color:var(--accent)" id="api-endpoint">http://localhost:3000/api/movies</code>.
       El servidor guardará la película en
       <a href="database.html" style="color:var(--accent)">database.txt</a>.
     </p>
@@ -163,7 +163,7 @@
     <!-- Info de la API -->
     <div style="margin-top:32px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
       <h4 style="font-family:var(--font-hero);font-size:18px;letter-spacing:1px;margin-bottom:12px;color:var(--accent)">Endpoint</h4>
-      <pre style="font-size:12px;color:#a0d0e8;line-height:1.8;">POST http://localhost:3000/api/movies
+      <pre style="font-size:12px;color:#a0d0e8;line-height:1.8;">POST <code id="api-endpoint-2">http://localhost:3000</code>/api/movies
 Content-Type: application/json
 
 {
@@ -183,7 +183,11 @@ Content-Type: application/json
 </main>
 
 <script>
-  const API = 'http://localhost:3000/api/movies';
+  const API = `${window.location.origin}/api/movies`;
+  
+  // Actualizar URLs mostradas en la página
+  document.getElementById('api-endpoint').textContent = API;
+  document.getElementById('api-endpoint-2').textContent = window.location.origin;
 
   function getFormData() {
     return {
