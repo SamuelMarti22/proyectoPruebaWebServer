@@ -189,6 +189,12 @@ Content-Type: application/json
   document.getElementById('api-endpoint').textContent = API;
   document.getElementById('api-endpoint-2').textContent = window.location.origin;
 
+  console.info('[agregar] origin:', window.location.origin);
+  console.info('[agregar] api:', API);
+  if (window.location.origin.includes('5500')) {
+    console.warn('[agregar] estás abriendo esta página con Live Server. La API no vive ahí; debe responder el servidor Node en el mismo origen o mediante proxy.');
+  }
+
   function getFormData() {
     return {
       title:       document.getElementById('title').value.trim(),
@@ -255,6 +261,7 @@ Content-Type: application/json
     log(`→ Body: ${JSON.stringify(d, null, 2)}`);
     log('');
     log('Esperando respuesta del servidor...', 'yellow');
+    console.info('[agregar] submitMovie() sending payload:', d);
 
     try {
       const res  = await fetch(API, {
@@ -262,7 +269,12 @@ Content-Type: application/json
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(d),
       });
-      const json = await res.json();
+      const raw = await res.text();
+      console.info('[agregar] response status:', res.status, res.statusText);
+      console.info('[agregar] response content-type:', res.headers.get('content-type'));
+      console.info('[agregar] raw response:', raw);
+
+      const json = JSON.parse(raw);
 
       log('');
       log(`← Status: ${res.status} ${res.statusText}`, res.ok ? 'green' : 'red');
@@ -275,6 +287,7 @@ Content-Type: application/json
         showAlert(`Error ${res.status}: ${json.error}`, 'error');
       }
     } catch (e) {
+      console.error('[agregar] submitMovie failed:', e);
       log('');
       log(`← ERROR: ${e.message}`, 'red');
       showAlert('No se pudo conectar con el servidor. ¿Está corriendo server.js?', 'error');

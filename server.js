@@ -90,9 +90,12 @@ const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname  = parsedUrl.pathname;
   const method    = req.method.toUpperCase();
+  const origin    = req.headers.origin || '-';
+  const remote    = req.socket.remoteAddress || '-';
 
   // CORS preflight
   if (method === 'OPTIONS') {
+    console.log(`[${new Date().toISOString()}] OPTIONS ${pathname} origin=${origin} remote=${remote}`);
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -102,7 +105,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  console.log(`[${new Date().toISOString()}] ${method} ${pathname}`);
+  console.log(`[${new Date().toISOString()}] ${method} ${pathname} origin=${origin} remote=${remote}`);
 
   // ── API Routes ─────────────────────────────────────────────────────────
 
@@ -110,8 +113,10 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/movies' && method === 'GET') {
     try {
       const movies = readMovies();
+      console.log(`[api/movies] GET -> ${movies.length} registros`);
       sendJSON(res, 200, { success: true, count: movies.length, data: movies });
     } catch (e) {
+      console.error('[api/movies] GET failed:', e);
       sendJSON(res, 500, { success: false, error: e.message });
     }
     return;
@@ -123,9 +128,11 @@ const server = http.createServer(async (req, res) => {
     try {
       const movies = readMovies();
       const movie = movies.find(m => m.id === movieMatch[1]);
+      console.log(`[api/movies/${movieMatch[1]}] GET -> ${movie ? 'found' : 'not found'}`);
       if (!movie) return sendJSON(res, 404, { success: false, error: 'Película no encontrada' });
       sendJSON(res, 200, { success: true, data: movie });
     } catch (e) {
+      console.error(`[api/movies/${movieMatch?.[1]}] GET failed:`, e);
       sendJSON(res, 500, { success: false, error: e.message });
     }
     return;
@@ -135,20 +142,27 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/movies' && method === 'POST') {
     try {
       const body = await readBody(req);
+      console.log('[api/movies] POST body raw:', body);
       const movie = JSON.parse(body);
+      console.log('[api/movies] POST parsed:', movie);
 
       // Validación básica
       const required = ['title', 'year', 'genre', 'director', 'rating', 'description'];
       for (const field of required) {
-        if (!movie[field]) return sendJSON(res, 400, { success: false, error: `Campo requerido: ${field}` });
+        if (!movie[field]) {
+          console.warn('[api/movies] POST validation failed:', field);
+          return sendJSON(res, 400, { success: false, error: `Campo requerido: ${field}` });
+        }
       }
       movie.poster   = movie.poster   || 'https://via.placeholder.com/300x450?text=Sin+Imagen';
       movie.duration = movie.duration || '0';
       movie.cast     = movie.cast     || 'N/A';
 
       const saved = writeMovie(movie);
+      console.log('[api/movies] POST saved:', saved);
       sendJSON(res, 201, { success: true, data: saved });
     } catch (e) {
+      console.error('[api/movies] POST failed:', e);
       sendJSON(res, 400, { success: false, error: 'JSON inválido: ' + e.message });
     }
     return;
@@ -158,12 +172,14 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/db' && method === 'GET') {
     try {
       const content = fs.readFileSync(DB_FILE, 'utf-8');
+      console.log(`[api/db] GET -> ${content.length} bytes`);
       res.writeHead(200, {
         'Content-Type': 'text/plain; charset=utf-8',
         'Access-Control-Allow-Origin': '*',
       });
       res.end(content);
     } catch (e) {
+      console.error('[api/db] GET failed:', e);
       sendJSON(res, 500, { success: false, error: e.message });
     }
     return;
@@ -176,11 +192,13 @@ const server = http.createServer(async (req, res) => {
 
   // Seguridad: evitar path traversal
   if (!filePath.startsWith(CLIENT_DIR)) {
+    console.warn('[static] blocked path traversal attempt:', pathname, 'resolved=', filePath);
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 - Prohibido');
     return;
   }
 
+  console.log('[static] serving:', filePath);
   sendFile(res, filePath);
 });
 

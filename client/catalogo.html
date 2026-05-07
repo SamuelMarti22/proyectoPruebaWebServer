@@ -72,13 +72,24 @@
   let allMovies = [];
   let currentGenre = 'all';
 
+  console.info('[catalogo] origin:', window.location.origin);
+  console.info('[catalogo] api:', API);
+
   async function loadMovies() {
+    console.info('[catalogo] loadMovies() -> fetching', API);
     try {
       const res  = await fetch(API);
-      const json = await res.json();
+      const raw   = await res.text();
+      console.info('[catalogo] response status:', res.status, res.statusText);
+      console.info('[catalogo] response content-type:', res.headers.get('content-type'));
+      console.info('[catalogo] raw response:', raw);
+
+      const json = JSON.parse(raw);
+      console.info('[catalogo] parsed payload:', json);
       allMovies  = json.data;
       renderGrid(allMovies);
     } catch (e) {
+      console.error('[catalogo] loadMovies failed:', e);
       document.getElementById('grid').innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">
           <div style="font-size:48px;margin-bottom:16px">⚠️</div>
@@ -133,6 +144,7 @@
 
   // Modal
   function openModal(id) {
+    console.info('[catalogo] openModal id:', id);
     const m = allMovies.find(x => parseInt(x.id) === parseInt(id));
     if (!m) return;
     document.getElementById('modal-content').innerHTML = `

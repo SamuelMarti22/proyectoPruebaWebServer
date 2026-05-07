@@ -167,6 +167,9 @@
   let cachedMovies = [];
   let cachedRaw    = '';
 
+  console.info('[database] origin:', window.location.origin);
+  console.info('[database] base:', BASE);
+
   // ── Tabs ────────────────────────────────────────────────────────────────
   function switchTab(name) {
     document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
@@ -241,17 +244,25 @@
   // ── Carga ───────────────────────────────────────────────────────────────
   async function loadAll() {
     document.getElementById('refresh-btn').textContent = '↻ Recargando...';
+    console.info('[database] loadAll() -> fetching', `${BASE}/api/movies`, 'and', `${BASE}/api/db`);
 
     // Petición 1: /api/movies (JSON)
     try {
       const res  = await fetch(`${BASE}/api/movies`);
-      const json = await res.json();
+      const raw  = await res.text();
+      console.info('[database] /api/movies status:', res.status, res.statusText);
+      console.info('[database] /api/movies content-type:', res.headers.get('content-type'));
+      console.info('[database] /api/movies raw:', raw);
+
+      const json = JSON.parse(raw);
+      console.info('[database] /api/movies parsed:', json);
       cachedMovies = json.data;
       renderStats(cachedMovies);
       renderTable(cachedMovies);
       renderJson(json);
       setStatus('status-api', `${res.status} OK`, true);
     } catch (e) {
+      console.error('[database] /api/movies failed:', e);
       document.getElementById('table-loading').style.display = 'none';
       document.getElementById('table-wrap').innerHTML =
         `<p style="padding:40px;text-align:center;color:var(--muted)">No se pudo cargar. ¿Está corriendo el servidor?</p>`;
@@ -262,9 +273,13 @@
     try {
       const res = await fetch(`${BASE}/api/db`);
       cachedRaw = await res.text();
+      console.info('[database] /api/db status:', res.status, res.statusText);
+      console.info('[database] /api/db content-type:', res.headers.get('content-type'));
+      console.info('[database] /api/db raw length:', cachedRaw.length);
       renderRaw(cachedRaw);
       setStatus('status-db', `${res.status} OK`, true);
     } catch (e) {
+      console.error('[database] /api/db failed:', e);
       document.getElementById('raw-loading').style.display = 'none';
       document.getElementById('db-raw').textContent = 'Error al cargar el archivo TXT.';
       document.getElementById('db-raw').style.display = 'block';
