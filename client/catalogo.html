@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="api-base" content="" />
   <title>CineLog — Catálogo</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -68,11 +69,11 @@
 </div>
 
 <script>
-  const API = `${window.location.origin}/api/movies`;
+  const API = `${window.API_BASE || 'http://localhost:3000'}/api/movies`;
   let allMovies = [];
   let currentGenre = 'all';
 
-  console.info('[catalogo] origin:', window.location.origin);
+  console.info('[catalogo] api base:', window.API_BASE || 'http://localhost:3000');
   console.info('[catalogo] api:', API);
 
   async function loadMovies() {

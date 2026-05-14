@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="api-base" content="" />
   <title>CineLog — Agregar Película</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
@@ -59,7 +60,7 @@
     <h1 class="form-title">Agregar Película</h1>
     <p class="form-sub">
       Completa el formulario y se enviará un <strong>POST</strong> a
-      <code style="color:var(--accent)" id="api-endpoint">http://localhost:3000/api/movies</code>.
+      <code style="color:var(--accent)" id="api-endpoint"></code>.
       El servidor guardará la película en
       <a href="database.html" style="color:var(--accent)">database.txt</a>.
     </p>
@@ -163,7 +164,7 @@
     <!-- Info de la API -->
     <div style="margin-top:32px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;">
       <h4 style="font-family:var(--font-hero);font-size:18px;letter-spacing:1px;margin-bottom:12px;color:var(--accent)">Endpoint</h4>
-      <pre style="font-size:12px;color:#a0d0e8;line-height:1.8;">POST <code id="api-endpoint-2">http://localhost:3000</code>/api/movies
+      <pre style="font-size:12px;color:#a0d0e8;line-height:1.8;">POST <code id="api-endpoint-2"></code>/api/movies
 Content-Type: application/json
 
 {
@@ -183,13 +184,13 @@ Content-Type: application/json
 </main>
 
 <script>
-  const API = `${window.location.origin}/api/movies`;
+  const API = `${window.API_BASE || 'http://localhost:3000'}/api/movies`;
   
   // Actualizar URLs mostradas en la página
   document.getElementById('api-endpoint').textContent = API;
-  document.getElementById('api-endpoint-2').textContent = window.location.origin;
+  document.getElementById('api-endpoint-2').textContent = window.API_BASE || 'http://localhost:3000';
 
-  console.info('[agregar] origin:', window.location.origin);
+  console.info('[agregar] api base:', window.API_BASE || 'http://localhost:3000');
   console.info('[agregar] api:', API);
   if (window.location.origin.includes('5500')) {
     console.warn('[agregar] estás abriendo esta página con Live Server. La API no vive ahí; debe responder el servidor Node en el mismo origen o mediante proxy.');

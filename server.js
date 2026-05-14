@@ -6,6 +6,7 @@ const url = require('url');
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || 'localhost';
+const API_BASE = process.env.API_BASE || `http://${HOST}:${PORT}`;
 const DB_FILE = path.join(__dirname, 'database.txt');
 const CLIENT_DIR = path.join(__dirname, 'client');
 
@@ -70,8 +71,17 @@ function sendFile(res, filePath) {
       res.end('404 - Archivo no encontrado');
       return;
     }
+    
+    let content = data.toString();
+    
+    // Inyectar API_BASE en HTMLs
+    if (filePath.endsWith('.html')) {
+      const apiBaseScript = `<script>window.API_BASE = ${JSON.stringify(API_BASE)};</script>`;
+      content = content.replace('</head>', `${apiBaseScript}\n</head>`);
+    }
+    
     res.writeHead(200, { 'Content-Type': getMime(filePath) });
-    res.end(data);
+    res.end(content);
   });
 }
 
